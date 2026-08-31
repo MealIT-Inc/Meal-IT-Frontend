@@ -81,6 +81,34 @@ export function FeedCard({ post }: { post: Post }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, post.images.length]);
 
+  // Disable background scroll when the lightbox is open (preserve scroll position)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let previousScrollY = 0;
+    if (lightboxIndex != null) {
+      previousScrollY = window.scrollY || 0;
+      // Lock body scroll and fix position to avoid background movement
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${previousScrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+
+      return () => {
+        // Restore
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        window.scrollTo(0, previousScrollY);
+      };
+    }
+
+    return;
+  }, [lightboxIndex]);
+
   return (
     <article className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
       <div className="flex items-center justify-between px-4 py-3">
