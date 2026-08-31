@@ -4,11 +4,12 @@ import React, { useEffect, useRef, useState } from "react";
 
 type CarouselProps = {
   images: string[];
+  descriptions?: string[];
   title?: string;
   onImageClick?: (index: number) => void;
 };
 
-export default function Carousel({ images, title, onImageClick }: CarouselProps) {
+export default function Carousel({ images, descriptions = [], title, onImageClick }: CarouselProps) {
   const [index, setIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const startX = useRef<number | null>(null);
@@ -96,6 +97,12 @@ export default function Carousel({ images, title, onImageClick }: CarouselProps)
           ))}
         </div>
       </div>
+
+      {descriptions[index] && (
+        <p className="px-4 pb-2 pt-1 text-center text-xs text-zinc-300">
+          {descriptions[index]}
+        </p>
+      )}
 
       {index > 0 && (
         <button

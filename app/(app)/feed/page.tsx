@@ -20,6 +20,11 @@ const posts = [
       "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80",
     ],
+    imageDescriptions: [
+      "Fresh Mediterranean bowl with avocado and greens.",
+      "Golden hour light over a colorful dinner plate.",
+      "A simple, vibrant plate ready to be shared.",
+    ],
     caption: "Golden hour dinner vibes with a fresh Mediterranean bowl.",
     likes: 1420,
     comments: 86,
@@ -42,6 +47,14 @@ const posts = [
       "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
     ],
+    imageDescriptions: [
+      "Crispy milanesa on a rustic wooden table.",
+      "A fresh side of greens and crunchy toppings.",
+      "Warm plate, bright flavors, and a perfect bite.",
+      "Late-night comfort food and good energy.",
+      "A close-up of the golden crust and texture.",
+      "The final shot before the table is cleared.",
+    ],
     caption: "Street food, late-night energy, and zero regrets.",
     likes: 2860,
     comments: 140,
@@ -59,6 +72,10 @@ const posts = [
     images: [
       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&w=1200&q=80",
+    ],
+    imageDescriptions: [
+      "Fresh pasta with a sunset glow and olive oil.",
+      "A cozy, simple plate made for sharing.",
     ],
     caption: "Sunset pasta, a little chaos, and lots of flavor.",
     likes: 3180,

@@ -9,6 +9,7 @@ type Post = {
   handle: string;
   location: string;
   images: string[]; // carousel images
+  imageDescriptions?: string[];
   caption: string;
   likes: number;
   comments: number;
@@ -61,12 +62,14 @@ export function FeedCard({ post }: { post: Post }) {
       <div className="px-0">
         <Carousel
           images={post.images}
+          descriptions={post.imageDescriptions}
           title={post.title}
           onImageClick={(i) => setLightboxIndex(i)}
         />
       </div>
 
       <div className="space-y-3 px-4 py-3">
+        {/*
         <div className="flex items-center justify-between">
           <div className="flex gap-4 text-xl text-zinc-200">
             <span>♥</span>
@@ -74,7 +77,7 @@ export function FeedCard({ post }: { post: Post }) {
             <span>✈</span>
           </div>
           <span className="text-sm text-zinc-400">{post.time}</span>
-        </div>
+        </div> */}
 
         <p className="text-sm text-zinc-200">
           <span className="font-semibold text-white">{post.handle}</span> {post.caption}
@@ -115,9 +118,9 @@ export function FeedCard({ post }: { post: Post }) {
         </div>
 
         <div className="flex items-center gap-2 text-xs text-zinc-400">
-          <span>{formatNumber(post.likes)} likes</span>
+          <span>Visited {post.time} ago</span>
           <span>•</span>
-          <span>{post.comments} comments</span>
+          <span>Posted {post.time} ago</span>
         </div>
       </div>
 
@@ -132,13 +135,21 @@ export function FeedCard({ post }: { post: Post }) {
             ✕
           </button>
 
-          <div className="max-h-full max-w-full overflow-hidden rounded-2xl bg-black/30">
-            <img
-              src={post.images[lightboxIndex]}
-              alt={post.title ?? `image-${lightboxIndex + 1}`}
-              className="max-h-[90vh] max-w-[90vw] object-contain"
-              style={{ transform: "none", imageRendering: "auto" }}
-            />
+          <div className="flex max-h-[90vh] max-w-[90vw] flex-col items-center justify-center gap-3">
+            <div className="overflow-hidden rounded-2xl bg-black/30">
+              <img
+                src={post.images[lightboxIndex]}
+                alt={post.title ?? `image-${lightboxIndex + 1}`}
+                className="max-h-[80vh] max-w-[90vw] object-contain"
+                style={{ transform: "none", imageRendering: "auto" }}
+              />
+            </div>
+
+            {post.imageDescriptions?.[lightboxIndex] && (
+              <p className="max-w-[80vw] text-center text-sm text-zinc-100">
+                {post.imageDescriptions[lightboxIndex]}
+              </p>
+            )}
           </div>
 
           {/* prev/next inside lightbox */}
