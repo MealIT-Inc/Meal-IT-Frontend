@@ -180,37 +180,46 @@ export function FeedCard({ post }: { post: Post }) {
           </button>
 
           <div
-            className="flex max-h-[90vh] max-w-[90vw] flex-col items-center justify-center gap-3"
+            className="max-h-[90vh] max-w-[90vw] overflow-y-auto rounded-2xl p-1"
             onClick={(event) => event.stopPropagation()}
+            style={{ WebkitOverflowScrolling: "touch" }}
           >
-            <div className="overflow-hidden rounded-2xl bg-black/30">
-              <img
-                src={post.images[lightboxIndex]}
-                alt={post.title ?? `image-${lightboxIndex + 1}`}
-                className="max-h-[80vh] max-w-[90vw] object-contain"
-                style={{ transform: "none", imageRendering: "auto" }}
-              />
-            </div>
+            <div className="flex flex-col items-center justify-center gap-3">
+              <div className="overflow-hidden rounded-2xl bg-black/30">
+                <img
+                  src={post.images[lightboxIndex]}
+                  alt={post.title ?? `image-${lightboxIndex + 1}`}
+                  className="max-h-[80vh] max-w-[90vw] object-contain"
+                  style={{ transform: "none", imageRendering: "auto" }}
+                />
+              </div>
 
-            {post.imageDescriptions?.[lightboxIndex] && (
-              <p className="max-w-[80vw] text-center text-sm text-zinc-100">
-                {post.imageDescriptions[lightboxIndex]}
-              </p>
-            )}
+              {post.imageDescriptions?.[lightboxIndex] && (
+                <p className="max-w-[80vw] text-center text-sm text-zinc-100">
+                  {post.imageDescriptions[lightboxIndex]}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* prev/next inside lightbox */}
           <button
             aria-label="Previous"
-            onClick={goToPreviousImage}
-            className="absolute left-6 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-3 py-2 text-white"
+            onClick={(event) => {
+              event.stopPropagation();
+              goToPreviousImage();
+            }}
+            className="absolute left-6 top-1/2 -translate-y-1/2 cursor-pointer rounded-full bg-black/40 px-3 py-2 text-white"
           >
             ‹
           </button>
           <button
             aria-label="Next"
-            onClick={goToNextImage}
-            className="absolute right-6 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-3 py-2 text-white"
+            onClick={(event) => {
+              event.stopPropagation();
+              goToNextImage();
+            }}
+            className="absolute right-6 top-1/2 -translate-y-1/2 cursor-pointer rounded-full bg-black/40 px-3 py-2 text-white"
           >
             ›
           </button>
