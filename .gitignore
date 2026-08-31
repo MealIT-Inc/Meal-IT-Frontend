@@ -30,8 +30,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Environment files (do NOT commit real secrets)
+# Local env files for Next.js — keep all local and production overrides out of git
+.env.local
+.env.*.local
+.env
+# Firebase admin/service-account JSON files — never commit
+serviceAccountKey.json
+firebase-admin.json
 
 # vercel
 .vercel
