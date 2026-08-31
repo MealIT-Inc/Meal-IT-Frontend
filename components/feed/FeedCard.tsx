@@ -164,16 +164,25 @@ export function FeedCard({ post }: { post: Post }) {
 
       {/* Lightbox / full screen viewer */}
       {lightboxIndex != null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightboxIndex(null)}
+        >
           <button
             aria-label="Close"
-            onClick={() => setLightboxIndex(null)}
+            onClick={(event) => {
+              event.stopPropagation();
+              setLightboxIndex(null);
+            }}
             className="absolute right-4 top-4 rounded-full bg-black/60 px-3 py-2 text-white"
           >
             ✕
           </button>
 
-          <div className="flex max-h-[90vh] max-w-[90vw] flex-col items-center justify-center gap-3">
+          <div
+            className="flex max-h-[90vh] max-w-[90vw] flex-col items-center justify-center gap-3"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="overflow-hidden rounded-2xl bg-black/30">
               <img
                 src={post.images[lightboxIndex]}
