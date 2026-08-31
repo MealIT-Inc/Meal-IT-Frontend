@@ -209,7 +209,7 @@ export function FeedCard({ post }: { post: Post }) {
               event.stopPropagation();
               goToPreviousImage();
             }}
-            className="absolute left-6 top-1/2 -translate-y-1/2 cursor-pointer rounded-full bg-black/40 px-3 py-2 text-white"
+            className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 cursor-pointer rounded-full bg-black/40 px-3 py-2 text-white"
           >
             ‹
           </button>
@@ -219,7 +219,7 @@ export function FeedCard({ post }: { post: Post }) {
               event.stopPropagation();
               goToNextImage();
             }}
-            className="absolute right-6 top-1/2 -translate-y-1/2 cursor-pointer rounded-full bg-black/40 px-3 py-2 text-white"
+            className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 cursor-pointer rounded-full bg-black/40 px-3 py-2 text-white"
           >
             ›
           </button>

@@ -13,9 +13,12 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
   const [index, setIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  const dragging = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     setIndex(0);
+    dragging.current = false;
   }, [images]);
 
   function next() {
@@ -38,7 +41,18 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
     }
   }
   function onPointerMove(e: React.PointerEvent) {
-    // nothing — could add dragging visuals
+    if (startX.current == null || startY.current == null) return;
+    const dx = e.clientX - startX.current;
+    const dy = e.clientY - startY.current;
+    // if horizontal move dominates, treat as swipe and prevent accidental page scroll
+    if (!dragging.current && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 6) {
+      dragging.current = true;
+      try {
+        e.preventDefault();
+      } catch (err) {
+        // ignore
+      }
+    }
   }
   function onPointerUp(e: React.PointerEvent) {
     if (startX.current == null) return;
@@ -47,11 +61,25 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
     if (dx > threshold) prev();
     else if (dx < -threshold) next();
     startX.current = null;
+    startY.current = null;
+    dragging.current = false;
   }
 
-  // Touch fallback for older devices
+  // Touch fallback for older devices with better gesture detection
   function onTouchStart(e: React.TouchEvent) {
     startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    dragging.current = false;
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    if (startX.current == null || startY.current == null) return;
+    const dx = e.touches[0].clientX - startX.current;
+    const dy = e.touches[0].clientY - startY.current;
+    if (!dragging.current && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 6) {
+      dragging.current = true;
+      // prevent vertical scroll when horizontal swipe detected
+      e.preventDefault();
+    }
   }
   function onTouchEnd(e: React.TouchEvent) {
     if (startX.current == null) return;
@@ -60,6 +88,8 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
     if (dx > threshold) prev();
     else if (dx < -threshold) next();
     startX.current = null;
+    startY.current = null;
+    dragging.current = false;
   }
 
   return (
@@ -72,7 +102,9 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      style={{ touchAction: "pan-y" }}
     >
       <div className="relative w-full overflow-hidden bg-black/30">
         <div
