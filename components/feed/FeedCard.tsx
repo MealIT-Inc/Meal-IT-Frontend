@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Carousel from "@/components/feed/Carousel";
 
 type Post = {
@@ -42,6 +42,44 @@ function formatNumber(n: number) {
 export function FeedCard({ post }: { post: Post }) {
   const rStyle = ratingStyle(post.rating);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const goToPreviousImage = () => {
+    setLightboxIndex((current) => {
+      if (current == null) return null;
+      return Math.max(0, current - 1);
+    });
+  };
+
+  const goToNextImage = () => {
+    setLightboxIndex((current) => {
+      if (current == null) return null;
+      return Math.min(post.images.length - 1, current + 1);
+    });
+  };
+
+  useEffect(() => {
+    if (lightboxIndex == null) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goToPreviousImage();
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goToNextImage();
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setLightboxIndex(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxIndex, post.images.length]);
 
   return (
     <article className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
@@ -155,14 +193,14 @@ export function FeedCard({ post }: { post: Post }) {
           {/* prev/next inside lightbox */}
           <button
             aria-label="Previous"
-            onClick={() => setLightboxIndex((i) => (i == null ? null : Math.max(0, i - 1)))}
+            onClick={goToPreviousImage}
             className="absolute left-6 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-3 py-2 text-white"
           >
             ‹
           </button>
           <button
             aria-label="Next"
-            onClick={() => setLightboxIndex((i) => (i == null ? null : Math.min(post.images.length - 1, i + 1)))}
+            onClick={goToNextImage}
             className="absolute right-6 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-3 py-2 text-white"
           >
             ›
