@@ -19,31 +19,17 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
     setShouldLoadStates(images.map(() => false));
   }, [images]);
 
-  // when parentVisible becomes true, start sequential loading of images
+  // when parentVisible becomes true, ensure only the first image starts loading
   useEffect(() => {
     if (!parentVisible) return;
     // if any already true, don't restart
     if (shouldLoadStates.some(Boolean)) return;
-    // start with the first image
     setShouldLoadStates((s) => {
       const next = [...s];
       next[0] = true;
       return next;
     });
   }, [parentVisible]);
-
-  const handleImageLoaded = (idx: number) => {
-    setShouldLoadStates((s) => {
-      const next = [...s];
-      if (idx + 1 < next.length) next[idx + 1] = true;
-      return next;
-    });
-  };
-
-  const handleImageError = (idx: number) => {
-    // treat error as a trigger to start next image
-    handleImageLoaded(idx);
-  };
 
   const [index, setIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
@@ -55,6 +41,16 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
     setIndex(0);
     dragging.current = false;
   }, [images]);
+
+  // when the carousel index changes, ensure that image is allowed to load
+  useEffect(() => {
+    setShouldLoadStates((s) => {
+      if (s[index]) return s;
+      const next = [...s];
+      next[index] = true;
+      return next;
+    });
+  }, [index]);
 
   function next() {
     setIndex((i) => Math.min(images.length - 1, i + 1));
@@ -154,8 +150,6 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
                 className="block max-h-[62vh] w-full cursor-pointer"
                 onClick={() => onImageClick?.(i)}
                 shouldLoad={shouldLoadStates[i] || i === index}
-                onLoad={() => handleImageLoaded(i)}
-                onError={() => handleImageError(i)}
                 draggable={false}
               />
             </div>
