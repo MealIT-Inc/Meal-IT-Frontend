@@ -3,21 +3,44 @@
 import React, { useEffect, useState } from "react";
 import Carousel from "@/components/feed/Carousel";
 
-type Post = {
-  id: number;
-  user: string;
-  handle: string;
-  location: string;
+export type Post = {
+  id?: string;
+  user?: string;
+  handle?: string;
+  location?: string;
   images: string[]; // carousel images
   imageDescriptions?: string[];
-  caption: string;
-  likes: number;
-  comments: number;
-  time: string;
+  caption?: string;
+  likes?: number;
+  comments?: number;
+  time?: string;
   title?: string; // dish title e.g. "Milanesa ibérica"
   cuisine?: string; // e.g. Mediterranean, Argentinian
   rating?: number; // 1..10 (allows decimals)
   pricePerPerson?: string; // e.g. "25€/person"
+  // Firestore fields
+  uid?: string;
+  userID?: string;
+  name?: string;
+  date?: string;
+  db_inserted?: string;
+  description?: string;
+  foodType?: string;
+  price?: string;
+  placeSelected?: {
+    city?: string;
+    fullAddress?: string;
+    latitude?: number;
+    longitude?: number;
+    name?: string;
+  };
+  // author info fetched from users/{uid}
+  author?: {
+    uid?: string;
+    fullName?: string;
+    username?: string;
+    profileImageURL?: string;
+  };
 };
 
 function ratingStyle(rating: number | undefined) {
@@ -40,6 +63,25 @@ function formatNumber(n: number) {
 }
 
 export function FeedCard({ post }: { post: Post }) {
+  const rootRef = React.useRef<HTMLElement | null>(null);
+  const [inView, setInView] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const el = rootRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setInView(true);
+        });
+      },
+      { root: null, rootMargin: "0px", threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   const rStyle = ratingStyle(post.rating);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -110,15 +152,19 @@ export function FeedCard({ post }: { post: Post }) {
   }, [lightboxIndex]);
 
   return (
-    <article className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+    <article ref={rootRef} className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-orange-400 to-yellow-300 text-sm font-bold text-white">
-            {post.user.slice(0, 2).toUpperCase()}
-          </div>
+          {post.author?.profileImageURL ? (
+            <img src={post.author.profileImageURL} alt={post.author.fullName ?? post.author.username} className="h-10 w-10 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-orange-400 to-yellow-300 text-sm font-bold text-white">
+              {((post.author?.fullName || post.user || "U").slice(0, 2) || "U").toUpperCase()}
+            </div>
+          )}
           <div>
-            <p className="text-sm font-semibold text-white">{post.user}</p>
-            <p className="text-[11px] text-zinc-400">{post.location}</p>
+            <p className="text-sm font-semibold text-white">{post.author?.fullName ?? post.user ?? post.name ?? "Unknown"}</p>
+            <p className="text-[11px] text-zinc-400">{post.author?.username ?? (post.user ? `@${post.user}` : post.location ?? post.placeSelected?.city ?? "—")}</p>
           </div>
         </div>
         <button className="text-xl text-zinc-400">⋯</button>
@@ -130,6 +176,7 @@ export function FeedCard({ post }: { post: Post }) {
           images={post.images}
           descriptions={post.imageDescriptions}
           title={post.title}
+          parentVisible={inView}
           onImageClick={(i) => setLightboxIndex(i)}
         />
       </div>
@@ -146,7 +193,7 @@ export function FeedCard({ post }: { post: Post }) {
         </div> */}
 
         <p className="text-sm text-zinc-200">
-          <span className="font-semibold text-white">{post.handle}</span> {post.caption}
+          <span className="font-semibold text-white">{post.handle || "@" + (post.user || "user").toLowerCase()}</span> {post.caption || post.description || ""}
         </p>
 
         <div className="relative">
@@ -155,7 +202,7 @@ export function FeedCard({ post }: { post: Post }) {
             <div className="flex-1">
               <div className="w-full text-center">
                 <span className="inline-block w-full rounded-2xl bg-zinc-800/70 px-4 py-2 text-sm font-medium text-zinc-200">
-                  {post.cuisine ?? "—"}
+                  {post.cuisine || post.foodType || "—"}
                 </span>
               </div>
             </div>
@@ -164,7 +211,7 @@ export function FeedCard({ post }: { post: Post }) {
             <div className="flex-1">
               <div className="w-full text-center">
                 <span className="inline-block w-full rounded-2xl bg-zinc-800/70 px-4 py-2 text-sm font-medium text-zinc-200">
-                  {post.pricePerPerson ?? "—"}
+                  {post.pricePerPerson || (post.price ? `${post.price}€` : "—")}
                 </span>
               </div>
             </div>
@@ -184,9 +231,9 @@ export function FeedCard({ post }: { post: Post }) {
         </div>
 
         <div className="flex items-center gap-2 text-xs text-zinc-400">
-          <span>Visited {post.time} ago</span>
+          <span>Visited {post.time || "—"} ago</span>
           <span>•</span>
-          <span>Posted {post.time} ago</span>
+          <span>Posted {post.time || "—"} ago</span>
         </div>
       </div>
 

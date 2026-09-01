@@ -1,15 +1,50 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import LazyImage from "@/components/ui/LazyImage";
 
 type CarouselProps = {
   images: string[];
   descriptions?: string[];
   title?: string;
   onImageClick?: (index: number) => void;
+  parentVisible?: boolean; // when true, start loading images
 };
 
-export default function Carousel({ images, descriptions = [], title, onImageClick }: CarouselProps) {
+export default function Carousel({ images, descriptions = [], title, onImageClick, parentVisible = false }: CarouselProps) {
+  const [shouldLoadStates, setShouldLoadStates] = useState<boolean[]>(() => images.map(() => false));
+
+  useEffect(() => {
+    // reset when images change
+    setShouldLoadStates(images.map(() => false));
+  }, [images]);
+
+  // when parentVisible becomes true, start sequential loading of images
+  useEffect(() => {
+    if (!parentVisible) return;
+    // if any already true, don't restart
+    if (shouldLoadStates.some(Boolean)) return;
+    // start with the first image
+    setShouldLoadStates((s) => {
+      const next = [...s];
+      next[0] = true;
+      return next;
+    });
+  }, [parentVisible]);
+
+  const handleImageLoaded = (idx: number) => {
+    setShouldLoadStates((s) => {
+      const next = [...s];
+      if (idx + 1 < next.length) next[idx + 1] = true;
+      return next;
+    });
+  };
+
+  const handleImageError = (idx: number) => {
+    // treat error as a trigger to start next image
+    handleImageLoaded(idx);
+  };
+
   const [index, setIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const startX = useRef<number | null>(null);
@@ -112,18 +147,16 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
           style={{ transform: `translateX(${-index * 100}%)` }}
         >
           {images.map((src, i) => (
-            <div key={i} className="flex w-full shrink-0 items-center justify-center overflow-hidden bg-zinc-950">
-              <img
+            <div key={i} className="flex w-full shrink-0 items-center justify-center overflow-hidden bg-zinc-950" style={{ minHeight: 200 }}>
+              <LazyImage
                 src={src}
                 alt={title ?? `image-${i + 1}`}
-                className="block max-h-[62vh] w-full cursor-pointer object-contain"
+                className="block max-h-[62vh] w-full cursor-pointer"
                 onClick={() => onImageClick?.(i)}
+                shouldLoad={shouldLoadStates[i] || i === index}
+                onLoad={() => handleImageLoaded(i)}
+                onError={() => handleImageError(i)}
                 draggable={false}
-                style={{
-                  objectPosition: "center center",
-                  transform: "none",
-                  filter: "none",
-                }}
               />
             </div>
           ))}
