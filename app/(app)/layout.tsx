@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { AuthProvider, useAuth } from "@/components/auth/AuthProvider";
@@ -48,14 +48,41 @@ function AppShell({ children }: { children: ReactNode }) {
     router.push(href);
   };
 
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const viewingUserFeed = pathname === "/feed" && Boolean(searchParams?.get("user"));
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <header className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/feed" onClick={(event) => { event.preventDefault(); goTo("/feed"); }} className="flex items-center gap-2">
-            <Image src="/MealitLogo.svg" alt="MealIT logo" width={32} height={32} className="h-8 w-8 rounded-lg object-contain" />
-            <span className="text-lg font-bold tracking-wide">MealIT</span>
-          </Link>
+          {viewingUserFeed ? (
+            <div className="flex items-center gap-2">
+              <button
+                aria-label="Back to profile"
+                onClick={() => {
+                  try {
+                    if (typeof window !== "undefined" && window.history.length > 1) {
+                      router.back();
+                      return;
+                    }
+                  } catch (e) {
+                    /* ignore */
+                  }
+                  router.push("/profile");
+                }}
+                className="flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-white hover:bg-white/5"
+              >
+                <i className="fa-solid fa-arrow-left" aria-hidden="true" />
+                <span className="ml-2">Back</span>
+              </button>
+            </div>
+          ) : (
+            <Link href="/feed" onClick={(event) => { event.preventDefault(); goTo("/feed"); }} className="flex items-center gap-2">
+              <Image src="/MealitLogo.svg" alt="MealIT logo" width={32} height={32} className="h-8 w-8 rounded-lg object-contain" />
+              <span className="text-lg font-bold tracking-wide">MealIT</span>
+            </Link>
+          )}
 
           <div className="flex items-center gap-3">
             <Link href="/profile" onClick={(event) => { event.preventDefault(); goTo("/profile"); }} className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white/10 text-sm font-semibold">

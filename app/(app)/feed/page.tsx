@@ -1,13 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { FeedCard } from "@/components/feed/FeedCard";
 import { useFeedPosts } from "@/hooks/useFeedPosts";
+import { useUserPosts } from "@/hooks/useUserPosts";
 
 const REFRESH_THRESHOLD = 90;
 
 export default function FeedPage() {
-  const { posts, loading, error, hasMore, loadMore, refresh } = useFeedPosts(10);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const userFilter = searchParams?.get("user");
+  const focusId = searchParams?.get("focus");
+
+  const feed = useFeedPosts(10);
+  const userFeed = useUserPosts(userFilter ?? undefined, 50);
+
+  // choose the active source
+  const posts = userFilter ? userFeed.posts : feed.posts;
+  const loading = userFilter ? userFeed.loading : feed.loading;
+  const error = userFilter ? userFeed.error : feed.error;
+  const hasMore = userFilter ? userFeed.hasMore : feed.hasMore;
+  const loadMore = userFilter ? userFeed.loadMore : feed.loadMore;
+  const refresh = userFilter ? userFeed.refresh : feed.refresh;
+
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const touchStartY = useRef<number | null>(null);
   const [pullDistance, setPullDistance] = useState(0);
@@ -73,6 +90,29 @@ export default function FeedPage() {
     setPullDistance(0);
   };
 
+  // if focusId provided, scroll to that post after posts render
+  useEffect(() => {
+    if (!focusId || !posts || posts.length === 0) return;
+
+    // wait a tick for rendering
+    const t = setTimeout(() => {
+      const el = document.getElementById(`post-${focusId}`);
+      if (el) {
+        try {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          // brief highlight
+          const prev = el.style.boxShadow;
+          el.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.25)";
+          setTimeout(() => (el.style.boxShadow = prev), 1200);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    }, 120);
+
+    return () => clearTimeout(t);
+  }, [focusId, posts]);
+
   return (
     <div
       className="relative"
@@ -95,7 +135,6 @@ export default function FeedPage() {
           <span>{refreshing ? "Refreshing" : pullDistance >= REFRESH_THRESHOLD ? "Release to refresh" : "Pull to refresh"}</span>
         </div>
       </div>
-
       <div
         className="space-y-5 transition-transform duration-200"
         style={{ transform: `translateY(${pullDistance}px)` }}

@@ -260,7 +260,7 @@ export function FeedCard({ post }: { post: Post }) {
     (post.user ? (post.user.startsWith("@") ? post.user : `@${post.user}`) : "@owner");
 
   return (
-    <article ref={rootRef} className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+    <article id={post.id ? `post-${post.id}` : undefined} ref={rootRef} className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           {post.author?.profileImageURL ? (

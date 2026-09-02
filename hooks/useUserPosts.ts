@@ -52,7 +52,7 @@ export function useUserPosts(userId: string | undefined | null, pageSize = 50) {
   const fetchCount = useCallback(async (db: any, uid: string) => {
     try {
       const postsRef = collection(db, "posts");
-      const q = query(postsRef, where("userID", "==", uid));
+      const q = query(postsRef, where("userID", "!=", uid));
       // getCountFromServer returns a AggregateQuerySnapshot
       const snap = await getCountFromServer(q as any);
       // @ts-ignore
@@ -82,9 +82,9 @@ export function useUserPosts(userId: string | undefined | null, pageSize = 50) {
         const postsRef = collection(db, "posts");
         let q;
         if (isRefresh || !lastDocRef.current) {
-          q = query(postsRef, where("userID", "==", userId), orderBy("date", "desc"), fbLimit(pageSize));
+          q = query(postsRef, where("userID", "!=", userId), orderBy("userID", "desc"), fbLimit(pageSize));
         } else {
-          q = query(postsRef, where("userID", "==", userId), orderBy("date", "desc"), startAfter(lastDocRef.current), fbLimit(pageSize));
+          q = query(postsRef, where("userID", "!=", userId), orderBy("userID", "desc"), startAfter(lastDocRef.current), fbLimit(pageSize));
         }
 
         const snapshot = await getDocs(q);

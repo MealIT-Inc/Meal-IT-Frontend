@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getFirebaseFirestore } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import type { Post } from "@/components/feed/FeedCard";
+import { FeedCard, type Post } from "@/components/feed/FeedCard";
 
 export default function PostViewer({ id }: { id: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [post, setPost] = useState<Post | null>(null);
+  const mode = searchParams?.get("mode") ?? null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
@@ -18,14 +20,29 @@ export default function PostViewer({ id }: { id: string }) {
     async function fetchPost() {
       setLoading(true);
       try {
-        if (!id || String(id) === "undefined" || String(id).trim() === "") {
+        // resolve id fallback: try to extract from URL if prop is missing or invalid
+        let resolvedId: string | null = id ?? null;
+        if (!resolvedId || String(resolvedId) === "undefined" || String(resolvedId).trim() === "") {
+          if (typeof window !== "undefined") {
+            try {
+              const sp = new URL(window.location.href).searchParams;
+              const fromQuery = sp.get("id") || sp.get("postId") || sp.get("pid");
+              if (fromQuery && fromQuery !== "undefined") resolvedId = fromQuery;
+              else {
+                const m = window.location.pathname.match(/\/post\/([^\/\?]+)/);
+                if (m && m[1] && m[1] !== "undefined") resolvedId = m[1];
+              }
+            } catch (e) {
+              // ignore URL parsing errors
+            }
+          }
+        }
+
+        if (!resolvedId) {
           setError("Invalid post id");
           setLoading(false);
-          // navigate back after brief delay so user isn't stuck
           try {
-            setTimeout(() => {
-              router.back();
-            }, 800);
+            setTimeout(() => router.back(), 800);
           } catch (e) {
             /* ignore */
           }
@@ -39,7 +56,7 @@ export default function PostViewer({ id }: { id: string }) {
         const db = getFirebaseFirestore();
         if (!db) throw new Error("Firestore not initialized");
 
-        const ref = doc(db, "posts", id);
+        const ref = doc(db, "posts", resolvedId);
         const snap = await getDoc(ref);
         if (!snap.exists()) {
           setError("Post not found");
@@ -176,7 +193,13 @@ export default function PostViewer({ id }: { id: string }) {
         {loading && <div className="py-10 text-center text-zinc-400">Loading…</div>}
         {error && <div className="py-10 text-center text-red-400">{error}</div>}
 
-        {post && (
+        {post && mode === "card" && (
+          <div className="mb-6">
+            <FeedCard post={post} />
+          </div>
+        )}
+
+        {post && mode !== "card" && (
           <>
             <div className="mb-4 rounded-3xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm text-zinc-400">{post.title || "Post"}</p>
@@ -187,16 +210,16 @@ export default function PostViewer({ id }: { id: string }) {
               {post.images.map((src, index) => (
                 <div key={`${src}-${index}`} className="overflow-hidden rounded-3xl border border-white/10 bg-black/20">
                       <div className="block w-full text-left">
-                    <img
-                      src={src}
-                      alt={post.title ?? `image-${index + 1}`}
-                      className="block max-h-[75vh] w-full object-contain bg-black/20"
-                    />
-                  </div>
+                        <img
+                          src={src}
+                          alt={post.title ?? `image-${index + 1}`}
+                          className="block max-h-[75vh] w-full object-contain bg-black/20"
+                        />
+                      </div>
 
-                  {post.imageDescriptions?.[index] && (
-                    <p className="px-4 py-3 text-sm text-zinc-200">{post.imageDescriptions[index]}</p>
-                  )}
+                      {post.imageDescriptions?.[index] && (
+                        <p className="px-4 py-3 text-sm text-zinc-200">{post.imageDescriptions[index]}</p>
+                      )}
                 </div>
               ))}
             </div>
