@@ -32,7 +32,7 @@ export default function FeedPage() {
   }, [hasMore, loading, loadMore]);
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (window.scrollY > 0 || refreshing) return;
+    if (refreshing) return;
     touchStartY.current = event.touches[0]?.clientY ?? null;
   };
 
@@ -42,12 +42,13 @@ export default function FeedPage() {
     const currentY = event.touches[0]?.clientY ?? touchStartY.current;
     const delta = currentY - touchStartY.current;
 
-    if (delta <= 0 || window.scrollY > 0) {
+    if (delta <= 0) {
       return;
     }
 
     const nextDistance = Math.min(140, delta * 0.6);
     setPullDistance(nextDistance);
+    // prevent default only when pulling down to avoid native bounce
     event.preventDefault();
   };
 

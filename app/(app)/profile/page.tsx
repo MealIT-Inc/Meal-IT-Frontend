@@ -85,14 +85,14 @@ export default function ProfilePage() {
       </section>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {posts.map((p: Post) => (
-          <Link key={p.id} href={`/post/${p.id}`} className="block">
+        {posts.map((p: Post, idx) => (
+          <div key={p.id ?? `missing-id-${idx}`} className="block">
             {p.images?.[0] ? (
               <Image src={p.images[0]} alt={p.title ?? "post image"} width={400} height={300} className="h-36 w-full rounded-2xl object-cover" />
             ) : (
               <div className="h-36 w-full rounded-2xl bg-zinc-800" />
             )}
-          </Link>
+          </div>
         ))}
       </div>
 

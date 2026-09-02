@@ -5,12 +5,19 @@ import { getFirebaseFirestore } from "@/lib/firebase";
 import { collection, query, orderBy, getDocs, Query, limit as fbLimit, startAfter, QueryDocumentSnapshot, DocumentData, doc, getDoc } from "firebase/firestore";
 import { Post } from "@/components/feed/FeedCard";
 
+const feedCache = {
+  initialized: false,
+  posts: [] as Post[],
+  hasMore: true,
+  lastDoc: null as QueryDocumentSnapshot<DocumentData> | null,
+};
+
 export function useFeedPosts(pageSize = 10) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>(feedCache.posts);
+  const [loading, setLoading] = useState(!feedCache.initialized);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [hasMore, setHasMore] = useState(feedCache.hasMore);
+  const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(feedCache.lastDoc);
   const isFetchingRef = useRef(false);
 
   const mapDoc = (doc: any): Post => {
@@ -33,7 +40,7 @@ export function useFeedPosts(pageSize = 10) {
       title: data.name,
       cuisine: data.foodType,
       location: data.placeSelected?.city,
-      pricePerPerson: data.price ? `${data.price}€` : undefined,
+      pricePerPerson: data.price ? `${data.price}€/person` : undefined,
       handle: data.handle ?? data.username ?? undefined,
       user: data.user ?? data.fullName ?? undefined,
     } as Post;
@@ -90,19 +97,35 @@ export function useFeedPosts(pageSize = 10) {
 
       const withAuthors = fetched.map((p) => ({ ...p, author: p.userID ? authorMap[p.userID] ?? { username: p.userID } : undefined } as Post));
 
+      // diagnostic: detect any posts that unexpectedly lack an id (shouldn't happen for Firestore documents)
+      const missingId = withAuthors.filter((p) => !p.id || String(p.id) === "undefined");
+      if (missingId.length > 0) {
+        // use console.warn so it's visible in browser console during testing
+        console.warn("useFeedPosts: fetched posts with missing id:", missingId.map((x) => ({ title: x.title, images: x.images?.slice(0,2), id: x.id })));
+      }
+
       if (isRefresh) {
         setPosts(withAuthors);
+        feedCache.posts = withAuthors;
       } else {
-        setPosts((prev) => [...prev, ...withAuthors]);
+        const merged = [...(feedCache.posts || []), ...withAuthors];
+        setPosts(merged);
+        feedCache.posts = merged;
       }
 
       // update last doc
       if (snapshot.docs.length > 0) {
         lastDocRef.current = snapshot.docs[snapshot.docs.length - 1];
+        feedCache.lastDoc = lastDocRef.current;
+      } else {
+        lastDocRef.current = null;
+        feedCache.lastDoc = null;
       }
 
-      // if fewer than pageSize returned, no more
-      setHasMore(snapshot.docs.length === pageSize);
+      const nextHasMore = snapshot.docs.length === pageSize;
+      setHasMore(nextHasMore);
+      feedCache.hasMore = nextHasMore;
+      feedCache.initialized = true;
       setError(null);
     } catch (err: any) {
       console.error("Failed to fetch posts", err);
@@ -114,10 +137,19 @@ export function useFeedPosts(pageSize = 10) {
   }, [pageSize]);
 
   useEffect(() => {
-    // initial load
+    if (feedCache.initialized) {
+      setPosts(feedCache.posts);
+      setHasMore(feedCache.hasMore);
+      setLoading(false);
+      return;
+    }
+
     lastDocRef.current = null;
+    feedCache.lastDoc = null;
     setPosts([]);
     setHasMore(true);
+    feedCache.posts = [];
+    feedCache.hasMore = true;
     fetchPage(true);
   }, [fetchPage]);
 
@@ -128,6 +160,9 @@ export function useFeedPosts(pageSize = 10) {
 
   const refresh = useCallback(async () => {
     lastDocRef.current = null;
+    feedCache.lastDoc = null;
+    feedCache.posts = [];
+    feedCache.hasMore = true;
     setHasMore(true);
     await fetchPage(true);
   }, [fetchPage]);

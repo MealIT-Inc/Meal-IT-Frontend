@@ -45,7 +45,7 @@ export function useUserPosts(userId: string | undefined | null, pageSize = 50) {
       title: data.name,
       cuisine: data.foodType,
       location: data.placeSelected?.city,
-      pricePerPerson: data.price ? `${data.price}€` : undefined,
+      pricePerPerson: data.price ? `${data.price}€/person` : undefined,
     } as Post;
   }, []);
 
@@ -89,6 +89,12 @@ export function useUserPosts(userId: string | undefined | null, pageSize = 50) {
 
         const snapshot = await getDocs(q);
         const fetched = snapshot.docs.map(mapDoc);
+
+        // diagnostic: detect any posts that unexpectedly lack an id
+        const missingId = fetched.filter((p) => !p.id || String(p.id) === "undefined");
+        if (missingId.length > 0) {
+          console.warn("useUserPosts: fetched posts with missing id:", missingId.map((x) => ({ title: x.title, images: x.images?.slice(0,2), id: x.id })));
+        }
 
         if (isRefresh) {
           setPosts(fetched);

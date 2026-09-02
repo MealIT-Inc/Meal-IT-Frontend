@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Carousel from "@/components/feed/Carousel";
 
 export type Post = {
@@ -45,27 +46,14 @@ export type Post = {
 
 function ratingStyle(rating: number | undefined) {
   if (rating == null || Number.isNaN(rating)) {
-    return { background: "linear-gradient(135deg,#3f3f46,#52525b)", textClass: "text-white" };
+    return { background: "linear-gradient(90deg,#444,#666)", textClass: "text-white" };
   }
-
-  const value = Math.max(1, Math.min(10, Math.round(rating)));
-  const palette = [
-    "hsl(0 90% 52%)",
-    "hsl(8 90% 56%)",
-    "hsl(18 90% 58%)",
-    "hsl(30 94% 60%)",
-    "hsl(42 95% 58%)",
-    "hsl(55 95% 52%)",
-    "hsl(72 88% 48%)",
-    "hsl(94 82% 42%)",
-    "hsl(118 82% 38%)",
-    "hsl(140 85% 34%)",
-  ];
-
-  const color = palette[value - 1];
-  const background = `linear-gradient(135deg, ${color}, ${color})`;
-  const textClass = value >= 6 ? "text-zinc-950" : "text-white";
-
+  const value = Math.max(1, Math.min(10, rating));
+  const hue = ((value - 1) / 9) * 120; // 0..120
+  const h1 = `hsl(${hue} 90% 45%)`;
+  const h2 = `hsl(${Math.min(150, hue + 20)} 85% 50%)`;
+  const background = `linear-gradient(90deg, ${h1}, ${h2})`;
+  const textClass = hue > 60 ? "text-zinc-900" : "text-white";
   return { background, textClass };
 }
 
@@ -149,6 +137,7 @@ function formatRelativeOrExactDate(value: Post["date"] | Post["db_inserted"], no
 
 export function FeedCard({ post }: { post: Post }) {
   const rootRef = React.useRef<HTMLElement | null>(null);
+  const router = useRouter();
   const [inView, setInView] = React.useState(false);
   const [now, setNow] = React.useState<number | null>(null);
 
@@ -176,6 +165,7 @@ export function FeedCard({ post }: { post: Post }) {
   }, []);
 
   const rStyle = ratingStyle(post.rating);
+
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const goToPreviousImage = () => {
@@ -192,32 +182,28 @@ export function FeedCard({ post }: { post: Post }) {
     });
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (lightboxIndex == null) return;
-
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "ArrowLeft") {
         event.preventDefault();
         goToPreviousImage();
       }
-
       if (event.key === "ArrowRight") {
         event.preventDefault();
         goToNextImage();
       }
-
       if (event.key === "Escape") {
         event.preventDefault();
         setLightboxIndex(null);
       }
     }
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, post.images.length]);
 
   // Disable background scroll when the lightbox is open (preserve scroll position)
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window === "undefined") return;
 
     let previousScrollY = 0;
@@ -244,7 +230,28 @@ export function FeedCard({ post }: { post: Post }) {
     return;
   }, [lightboxIndex]);
 
+  const openPostGallery = (imageIndex: number | null = null) => {
+    if (post.id) {
+      const url = imageIndex != null ? `/post/${post.id}?image=${imageIndex}` : `/post/${post.id}`;
+      router.push(url);
+      return;
+    }
+    setLightboxIndex(imageIndex ?? 0);
+  };
+
   const restaurantName = post.placeSelected?.name || "Restaurant";
+
+  // diagnostic: surface posts without id in console when rendering feed
+  if (!post?.id) {
+    try {
+      // keep this non-blocking and safe for SSR by guarding window
+      if (typeof window !== "undefined") {
+        console.warn("FeedCard: rendering post without id", { title: post.title, images: post.images?.slice(0,2) });
+      }
+    } catch (e) {
+      /* ignore logging errors */
+    }
+  }
   const city = post.placeSelected?.city || post.location || "Unknown city";
   const authorName = post.author?.fullName || post.user || "Unknown";
   const ownerHandle =
@@ -273,14 +280,13 @@ export function FeedCard({ post }: { post: Post }) {
         <button className="text-xl text-zinc-400">⋯</button>
       </div>
 
-      {/* Carousel (click image to open lightbox) */}
+      {/* Carousel (click image to open the full post gallery) */}
       <div className="px-0">
         <Carousel
           images={post.images}
           descriptions={post.imageDescriptions}
           title={post.title}
           parentVisible={inView}
-          onImageClick={(i) => setLightboxIndex(i)}
         />
       </div>
 
@@ -340,10 +346,9 @@ export function FeedCard({ post }: { post: Post }) {
         </div>
       </div>
 
-      {/* Lightbox / full screen viewer */}
       {lightboxIndex != null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
           onClick={() => setLightboxIndex(null)}
         >
           <button
@@ -403,6 +408,7 @@ export function FeedCard({ post }: { post: Post }) {
           </button>
         </div>
       )}
+
     </article>
   );
 }
