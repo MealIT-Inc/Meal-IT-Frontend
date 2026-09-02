@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BottomNav } from "@/components/navigation/BottomNav";
@@ -23,7 +24,7 @@ function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2">
-            <img src="/MealitLogo.svg" alt="MealIT logo" className="h-8 w-8 rounded-lg object-contain" />
+            <Image src="/MealitLogo.svg" alt="MealIT logo" width={32} height={32} className="h-8 w-8 rounded-lg object-contain" />
             <span className="text-lg font-bold tracking-wide">MealIT</span>
           </div>
 
@@ -33,7 +34,7 @@ function AppShell({ children }: { children: ReactNode }) {
             </button>
             <Link href="/profile" className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white/10 text-sm font-semibold">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                <Image src={avatarUrl} alt="Profile" width={36} height={36} className="h-full w-full object-cover" />
               ) : (
                 <span>{initials}</span>
               )}

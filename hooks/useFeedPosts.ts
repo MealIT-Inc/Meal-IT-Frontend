@@ -34,6 +34,8 @@ export function useFeedPosts(pageSize = 10) {
       cuisine: data.foodType,
       location: data.placeSelected?.city,
       pricePerPerson: data.price ? `${data.price}€` : undefined,
+      handle: data.handle ?? data.username ?? undefined,
+      user: data.user ?? data.fullName ?? undefined,
     } as Post;
   };
 

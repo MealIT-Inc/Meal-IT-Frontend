@@ -62,9 +62,89 @@ function formatNumber(n: number) {
   return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+function parseDateValue(value: string | number | Date | { toDate?: () => Date } | null | undefined) {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === "number") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const euDateMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (euDateMatch) {
+      const [, day, month, yearPart] = euDateMatch;
+      const year = yearPart.length === 2 ? 2000 + Number(yearPart) : Number(yearPart);
+      const date = new Date(year, Number(month) - 1, Number(day));
+      if (!Number.isNaN(date.getTime())) return date;
+    }
+
+    const numeric = Number(trimmed);
+    if (!Number.isNaN(numeric) && String(Math.abs(numeric)).length >= 10) {
+      const date = new Date(numeric);
+      if (!Number.isNaN(date.getTime())) return date;
+    }
+
+    const date = new Date(trimmed);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === "object" && typeof value.toDate === "function") {
+    const date = value.toDate();
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+}
+
+function formatRelativeOrExactDate(value: Post["date"] | Post["db_inserted"], now: number | null) {
+  const date = parseDateValue(value);
+  if (!date) return "—";
+
+  const formattedDate = `on ${date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "2-digit" })}`;
+  if (now == null) return formattedDate;
+
+  const diffMs = now - date.getTime();
+  if (diffMs < 0) {
+    return formattedDate;
+  }
+
+  const seconds = Math.floor(diffMs / 1000);
+  if (seconds < 60) {
+    return `${seconds} second${seconds === 1 ? "" : "s"} ago`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+
+  return formattedDate;
+}
+
 export function FeedCard({ post }: { post: Post }) {
   const rootRef = React.useRef<HTMLElement | null>(null);
   const [inView, setInView] = React.useState(false);
+  const [now, setNow] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    const updateNow = () => setNow(Date.now());
+    updateNow();
+    const interval = window.setInterval(updateNow, 1000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -151,20 +231,30 @@ export function FeedCard({ post }: { post: Post }) {
     return;
   }, [lightboxIndex]);
 
+  const restaurantName = post.placeSelected?.name || "Restaurant";
+  const city = post.placeSelected?.city || post.location || "Unknown city";
+  const authorName = post.author?.fullName || post.user || "Unknown";
+  const ownerHandle =
+    post.author?.username ||
+    post.handle ||
+    (post.user ? (post.user.startsWith("@") ? post.user : `@${post.user}`) : "@owner");
+
   return (
     <article ref={rootRef} className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           {post.author?.profileImageURL ? (
-            <img src={post.author.profileImageURL} alt={post.author.fullName ?? post.author.username} className="h-10 w-10 rounded-full object-cover" />
+            <img src={post.author.profileImageURL} alt={authorName} className="h-10 w-10 rounded-full object-cover" />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-orange-400 to-yellow-300 text-sm font-bold text-white">
-              {((post.author?.fullName || post.user || "U").slice(0, 2) || "U").toUpperCase()}
+              {authorName.slice(0, 2).toUpperCase()}
             </div>
           )}
-          <div>
-            <p className="text-sm font-semibold text-white">{post.author?.fullName ?? post.user ?? post.name ?? "Unknown"}</p>
-            <p className="text-[11px] text-zinc-400">{post.author?.username ?? (post.user ? `@${post.user}` : post.location ?? post.placeSelected?.city ?? "—")}</p>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-white">{restaurantName}</p>
+            <p className="truncate text-[11px] text-zinc-400">
+              {city} <span aria-hidden="true">·</span> {authorName}
+            </p>
           </div>
         </div>
         <button className="text-xl text-zinc-400">⋯</button>
@@ -193,7 +283,7 @@ export function FeedCard({ post }: { post: Post }) {
         </div> */}
 
         <p className="text-sm text-zinc-200">
-          <span className="font-semibold text-white">{post.handle || "@" + (post.user || "user").toLowerCase()}</span> {post.caption || post.description || ""}
+          <span className="font-semibold text-white">{ownerHandle}</span> {post.caption || post.description || ""}
         </p>
 
         <div className="relative">
@@ -231,9 +321,9 @@ export function FeedCard({ post }: { post: Post }) {
         </div>
 
         <div className="flex items-center gap-2 text-xs text-zinc-400">
-          <span>Visited {post.time || "—"} ago</span>
+          <span>Visited {formatRelativeOrExactDate(post.date, now)}</span>
           <span>•</span>
-          <span>Posted {post.time || "—"} ago</span>
+          <span>Posted {formatRelativeOrExactDate(post.db_inserted, now)}</span>
         </div>
       </div>
 

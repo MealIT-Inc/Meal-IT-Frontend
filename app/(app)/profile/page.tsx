@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -8,15 +9,6 @@ import { signOut } from "firebase/auth";
 import Link from "next/link";
 import { useUserPosts } from "@/hooks/useUserPosts";
 import { Post } from "@/components/feed/FeedCard";
-
-const photos = [
-  "https://images.unsplash.com/photo-1528712306091-ed0763094c98?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80",
-];
 
 function initials(name?: string | null, email?: string | null) {
   const source = (name || email || "ME").trim();
@@ -52,9 +44,11 @@ export default function ProfilePage() {
       <section className="rounded-3xl border border-white/10 bg-white/5 p-5">
         <div className="flex items-center gap-4">
           {photoURL ? (
-            <img
+            <Image
               src={photoURL}
               alt={displayName}
+              width={80}
+              height={80}
               className="h-20 w-20 rounded-full object-cover"
             />
           ) : (
@@ -93,7 +87,11 @@ export default function ProfilePage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {posts.map((p: Post) => (
           <Link key={p.id} href={`/post/${p.id}`} className="block">
-            <img src={p.images?.[0] ?? ""} alt={p.title ?? "post image"} className="h-36 w-full rounded-2xl object-cover" />
+            {p.images?.[0] ? (
+              <Image src={p.images[0]} alt={p.title ?? "post image"} width={400} height={300} className="h-36 w-full rounded-2xl object-cover" />
+            ) : (
+              <div className="h-36 w-full rounded-2xl bg-zinc-800" />
+            )}
           </Link>
         ))}
       </div>

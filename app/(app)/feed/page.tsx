@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { FeedCard } from "@/components/feed/FeedCard";
 import { useFeedPosts } from "@/hooks/useFeedPosts";
 
@@ -37,8 +37,8 @@ export default function FeedPage() {
       )}
 
       <div className="space-y-5">
-        {posts.map((post) => (
-          <FeedCard key={post.id || Math.random()} post={post} />
+        {posts.map((post, index) => (
+          <FeedCard key={post.id || `post-${index}`} post={post} />
         ))}
       </div>
 

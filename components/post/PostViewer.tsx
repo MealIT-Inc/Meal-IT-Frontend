@@ -70,12 +70,14 @@ export default function PostViewer({ id }: { id: string }) {
             if (usnap.exists()) {
               const ud = usnap.data() || {};
               const email = typeof ud.email === "string" ? ud.email : undefined;
+              const username = ud.username ?? (email ? `@${email.split("@")[0]}` : undefined);
               mapped.author = {
                 uid: mapped.userID,
                 fullName: (ud.fullName || ud.displayName) ?? undefined,
-                username: ud.username ?? (email ? `@${email.split("@")[0]}` : undefined),
+                username,
                 profileImageURL: ud.profileImageURL ?? ud.photoURL ?? undefined,
               };
+              mapped.handle = username ?? mapped.handle;
             }
           } catch (innerErr) {
             console.debug("Failed to fetch author for post", innerErr);
