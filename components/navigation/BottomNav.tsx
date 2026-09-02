@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { MouseEvent } from "react";
 
 const items = [
-  { href: "/feed", label: "Home", icon: "⌂" },
-  { href: "/explore", label: "Explore", icon: "⌕" },
-  { href: "/create", label: "Create", icon: "+" },
-  { href: "/notifications", label: "Alerts", icon: "♡" },
-  { href: "/profile", label: "Profile", icon: "◉" },
+  { href: "/feed", label: "Home", iconClass: "fa-solid fa-house" },
+  { href: "/explore", label: "Explore", iconClass: "fa-solid fa-compass" },
+  { href: "/create", label: "Create", iconClass: "fa-solid fa-plus" },
+  { href: "/notifications", label: "Alerts", iconClass: "fa-solid fa-bell" },
+  { href: "/profile", label: "Profile", iconClass: "fa-solid fa-user" },
 ];
 
 function smoothScrollToTop() {
@@ -56,7 +56,7 @@ export function BottomNav() {
             onClick={handleNavClick}
             className="flex flex-col items-center gap-1 px-2 py-2 text-[11px] text-zinc-400 transition hover:text-white"
           >
-            <span className="text-xl leading-none transition-transform duration-200">{item.icon}</span>
+            <i className={`${item.iconClass} text-xl leading-none transition-transform duration-200`} aria-hidden="true" />
             <span>{item.label}</span>
           </Link>
         ))}

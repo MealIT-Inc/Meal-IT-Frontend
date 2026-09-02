@@ -58,9 +58,6 @@ function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
           <div className="flex items-center gap-3">
-            <button className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-zinc-300">
-              Search
-            </button>
             <Link href="/profile" onClick={(event) => { event.preventDefault(); goTo("/profile"); }} className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white/10 text-sm font-semibold">
               {avatarUrl ? (
                 <Image src={avatarUrl} alt="Profile" width={36} height={36} className="h-full w-full object-cover" />
