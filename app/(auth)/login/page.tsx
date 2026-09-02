@@ -24,6 +24,7 @@ export default function LoginPage() {
       const auth = getFirebaseAuth();
       if (!auth) throw new Error("Firebase not initialized");
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(auth, provider);
       router.replace("/feed");
     } catch (err: any) {

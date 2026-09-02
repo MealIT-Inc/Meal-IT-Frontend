@@ -25,10 +25,11 @@ export default function SignupPage() {
       const auth = getFirebaseAuth();
       if (!auth) throw new Error("Firebase not initialized");
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(auth, provider);
       router.replace("/feed");
     } catch (err: any) {
-      setError(err?.message ?? "Google sign-up failed");
+      setError(err?.message ?? "Google sign-in failed");
     } finally {
       setLoading(false);
     }
@@ -67,7 +68,7 @@ export default function SignupPage() {
 
       <Button variant="secondary" onClick={handleGoogle} disabled={loading} className="w-full justify-center gap-2 rounded-2xl py-3">
         <FontAwesomeIcon icon={faGoogle} className="text-xl" />
-        <span>Sign up with Google</span>
+        <span>Continue with Google</span>
       </Button>
 
       <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-zinc-500">
