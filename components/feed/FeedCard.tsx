@@ -45,14 +45,27 @@ export type Post = {
 
 function ratingStyle(rating: number | undefined) {
   if (rating == null || Number.isNaN(rating)) {
-    return { background: "linear-gradient(90deg,#444,#666)", textClass: "text-white" };
+    return { background: "linear-gradient(135deg,#3f3f46,#52525b)", textClass: "text-white" };
   }
-  const value = Math.max(1, Math.min(10, rating));
-  const hue = ((value - 1) / 9) * 120; // 0..120
-  const h1 = `hsl(${hue} 90% 45%)`;
-  const h2 = `hsl(${Math.min(150, hue + 20)} 85% 50%)`;
-  const background = `linear-gradient(90deg, ${h1}, ${h2})`;
-  const textClass = hue > 60 ? "text-zinc-900" : "text-white";
+
+  const value = Math.max(1, Math.min(10, Math.round(rating)));
+  const palette = [
+    "hsl(0 90% 52%)",
+    "hsl(8 90% 56%)",
+    "hsl(18 90% 58%)",
+    "hsl(30 94% 60%)",
+    "hsl(42 95% 58%)",
+    "hsl(55 95% 52%)",
+    "hsl(72 88% 48%)",
+    "hsl(94 82% 42%)",
+    "hsl(118 82% 38%)",
+    "hsl(140 85% 34%)",
+  ];
+
+  const color = palette[value - 1];
+  const background = `linear-gradient(135deg, ${color}, ${color})`;
+  const textClass = value >= 6 ? "text-zinc-950" : "text-white";
+
   return { background, textClass };
 }
 
@@ -301,7 +314,7 @@ export function FeedCard({ post }: { post: Post }) {
             <div className="flex-1">
               <div className="w-full text-center">
                 <span className="inline-block w-full rounded-2xl bg-zinc-800/70 px-4 py-2 text-sm font-medium text-zinc-200">
-                  {post.pricePerPerson || (post.price ? `${post.price}€` : "—")}
+                  {post.pricePerPerson || (post.price ? `${post.price}€/person` : "—")}
                 </span>
               </div>
             </div>
