@@ -147,8 +147,7 @@ export default function Carousel({ images, descriptions = [], title, onImageClic
               <LazyImage
                 src={src}
                 alt={title ?? `image-${i + 1}`}
-                className="block max-h-[62vh] w-full cursor-pointer"
-                onClick={() => onImageClick?.(i)}
+                className="block max-h-[62vh] w-full"
                 shouldLoad={shouldLoadStates[i] || i === index}
                 draggable={false}
               />

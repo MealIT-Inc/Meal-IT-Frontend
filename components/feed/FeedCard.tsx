@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Carousel from "@/components/feed/Carousel";
 
 export type Post = {
@@ -136,6 +137,7 @@ function formatRelativeOrExactDate(value: Post["date"] | Post["db_inserted"], no
 
 export function FeedCard({ post }: { post: Post }) {
   const rootRef = React.useRef<HTMLElement | null>(null);
+  const router = useRouter();
   const [inView, setInView] = React.useState(false);
   const [now, setNow] = React.useState<number | null>(null);
 
@@ -163,6 +165,7 @@ export function FeedCard({ post }: { post: Post }) {
   }, []);
 
   const rStyle = ratingStyle(post.rating);
+
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const goToPreviousImage = () => {
@@ -179,32 +182,28 @@ export function FeedCard({ post }: { post: Post }) {
     });
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (lightboxIndex == null) return;
-
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "ArrowLeft") {
         event.preventDefault();
         goToPreviousImage();
       }
-
       if (event.key === "ArrowRight") {
         event.preventDefault();
         goToNextImage();
       }
-
       if (event.key === "Escape") {
         event.preventDefault();
         setLightboxIndex(null);
       }
     }
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, post.images.length]);
 
   // Disable background scroll when the lightbox is open (preserve scroll position)
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window === "undefined") return;
 
     let previousScrollY = 0;
@@ -231,7 +230,28 @@ export function FeedCard({ post }: { post: Post }) {
     return;
   }, [lightboxIndex]);
 
+  const openPostGallery = (imageIndex: number | null = null) => {
+    if (post.id) {
+      const url = imageIndex != null ? `/post/${post.id}?image=${imageIndex}` : `/post/${post.id}`;
+      router.push(url);
+      return;
+    }
+    setLightboxIndex(imageIndex ?? 0);
+  };
+
   const restaurantName = post.placeSelected?.name || "Restaurant";
+
+  // diagnostic: surface posts without id in console when rendering feed
+  if (!post?.id) {
+    try {
+      // keep this non-blocking and safe for SSR by guarding window
+      if (typeof window !== "undefined") {
+        console.warn("FeedCard: rendering post without id", { title: post.title, images: post.images?.slice(0,2) });
+      }
+    } catch (e) {
+      /* ignore logging errors */
+    }
+  }
   const city = post.placeSelected?.city || post.location || "Unknown city";
   const authorName = post.author?.fullName || post.user || "Unknown";
   const ownerHandle =
@@ -240,7 +260,7 @@ export function FeedCard({ post }: { post: Post }) {
     (post.user ? (post.user.startsWith("@") ? post.user : `@${post.user}`) : "@owner");
 
   return (
-    <article ref={rootRef} className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+    <article id={post.id ? `post-${post.id}` : undefined} ref={rootRef} className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           {post.author?.profileImageURL ? (
@@ -260,14 +280,13 @@ export function FeedCard({ post }: { post: Post }) {
         <button className="text-xl text-zinc-400">⋯</button>
       </div>
 
-      {/* Carousel (click image to open lightbox) */}
+      {/* Carousel (click image to open the full post gallery) */}
       <div className="px-0">
         <Carousel
           images={post.images}
           descriptions={post.imageDescriptions}
           title={post.title}
           parentVisible={inView}
-          onImageClick={(i) => setLightboxIndex(i)}
         />
       </div>
 
@@ -301,7 +320,7 @@ export function FeedCard({ post }: { post: Post }) {
             <div className="flex-1">
               <div className="w-full text-center">
                 <span className="inline-block w-full rounded-2xl bg-zinc-800/70 px-4 py-2 text-sm font-medium text-zinc-200">
-                  {post.pricePerPerson || (post.price ? `${post.price}€` : "—")}
+                  {post.pricePerPerson || (post.price ? `${post.price}€/person` : "—")}
                 </span>
               </div>
             </div>
@@ -327,10 +346,9 @@ export function FeedCard({ post }: { post: Post }) {
         </div>
       </div>
 
-      {/* Lightbox / full screen viewer */}
       {lightboxIndex != null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
           onClick={() => setLightboxIndex(null)}
         >
           <button
@@ -390,6 +408,7 @@ export function FeedCard({ post }: { post: Post }) {
           </button>
         </div>
       )}
+
     </article>
   );
 }

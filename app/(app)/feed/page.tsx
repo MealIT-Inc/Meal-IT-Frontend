@@ -1,12 +1,34 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { FeedCard } from "@/components/feed/FeedCard";
 import { useFeedPosts } from "@/hooks/useFeedPosts";
+import { useUserPosts } from "@/hooks/useUserPosts";
+
+const REFRESH_THRESHOLD = 90;
 
 export default function FeedPage() {
-  const { posts, loading, error, hasMore, loadMore } = useFeedPosts(10);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const userFilter = searchParams?.get("user");
+  const focusId = searchParams?.get("focus");
+
+  const feed = useFeedPosts(10);
+  const userFeed = useUserPosts(userFilter ?? undefined, 50);
+
+  // choose the active source
+  const posts = userFilter ? userFeed.posts : feed.posts;
+  const loading = userFilter ? userFeed.loading : feed.loading;
+  const error = userFilter ? userFeed.error : feed.error;
+  const hasMore = userFilter ? userFeed.hasMore : feed.hasMore;
+  const loadMore = userFilter ? userFeed.loadMore : feed.loadMore;
+  const refresh = userFilter ? userFeed.refresh : feed.refresh;
+
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Infinite scroll - observe sentinel
   useEffect(() => {
@@ -26,26 +48,112 @@ export default function FeedPage() {
     return () => obs.disconnect();
   }, [hasMore, loading, loadMore]);
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (refreshing) return;
+    touchStartY.current = event.touches[0]?.clientY ?? null;
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartY.current == null || refreshing) return;
+
+    const currentY = event.touches[0]?.clientY ?? touchStartY.current;
+    const delta = currentY - touchStartY.current;
+
+    if (delta <= 0) {
+      return;
+    }
+
+    const nextDistance = Math.min(140, delta * 0.6);
+    setPullDistance(nextDistance);
+    // prevent default only when pulling down to avoid native bounce
+    event.preventDefault();
+  };
+
+  const handleTouchEnd = async () => {
+    if (touchStartY.current == null) return;
+
+    const shouldRefresh = pullDistance >= REFRESH_THRESHOLD;
+    touchStartY.current = null;
+
+    if (shouldRefresh && !refreshing) {
+      setRefreshing(true);
+      setPullDistance(REFRESH_THRESHOLD);
+      try {
+        await refresh();
+      } finally {
+        setPullDistance(0);
+        setRefreshing(false);
+      }
+      return;
+    }
+
+    setPullDistance(0);
+  };
+
+  // if focusId provided, scroll to that post after posts render
+  useEffect(() => {
+    if (!focusId || !posts || posts.length === 0) return;
+
+    // wait a tick for rendering
+    const t = setTimeout(() => {
+      const el = document.getElementById(`post-${focusId}`);
+      if (el) {
+        try {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          // brief highlight
+          const prev = el.style.boxShadow;
+          el.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.25)";
+          setTimeout(() => (el.style.boxShadow = prev), 1200);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    }, 120);
+
+    return () => clearTimeout(t);
+  }, [focusId, posts]);
+
   return (
-    <div className="space-y-5">
-      {loading && posts.length === 0 && (
-        <div className="text-center text-zinc-400">Loading posts...</div>
-      )}
-
-      {error && (
-        <div className="text-center text-red-400">Error: {error}</div>
-      )}
-
-      <div className="space-y-5">
-        {posts.map((post, index) => (
-          <FeedCard key={post.id || `post-${index}`} post={post} />
-        ))}
+    <div
+      className="relative"
+      style={{ touchAction: "pan-y" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+    >
+      <div
+        className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-center transition-all duration-200"
+        style={{
+          height: 54,
+          transform: `translateY(${Math.max(0, pullDistance - 54)}px)`,
+          opacity: pullDistance > 0 || refreshing ? 1 : 0,
+        }}
+      >
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/90 px-3 py-2 text-xs font-medium text-zinc-200 shadow-lg backdrop-blur-sm">
+          <div className={`h-4 w-4 rounded-full border-2 border-zinc-600 border-t-white ${refreshing ? "animate-spin" : ""}`} />
+          <span>{refreshing ? "Refreshing" : pullDistance >= REFRESH_THRESHOLD ? "Release to refresh" : "Pull to refresh"}</span>
+        </div>
       </div>
+      <div
+        className="space-y-5 transition-transform duration-200"
+        style={{ transform: `translateY(${pullDistance}px)` }}
+      >
+        {loading && posts.length === 0 && <div className="text-center text-zinc-400">Loading posts...</div>}
 
-      <div ref={sentinelRef} className="h-8" />
+        {error && <div className="text-center text-red-400">Error: {error}</div>}
 
-      {loading && posts.length > 0 && <div className="text-center text-zinc-400">Loading more…</div>}
-      {!hasMore && <div className="text-center text-zinc-400">No more posts</div>}
+        <div className="space-y-5">
+          {posts.map((post, index) => (
+            <FeedCard key={post.id || `post-${index}`} post={post} />
+          ))}
+        </div>
+
+        <div ref={sentinelRef} className="h-8" />
+
+        {loading && posts.length > 0 && <div className="text-center text-zinc-400">Loading more…</div>}
+        {!hasMore && <div className="text-center text-zinc-400">No more posts</div>}
+      </div>
     </div>
   );
 }
