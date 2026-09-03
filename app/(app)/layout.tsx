@@ -54,7 +54,7 @@ function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           {viewingUserFeed ? (
             <div className="flex items-center gap-2">
@@ -96,7 +96,7 @@ function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-xl px-4 pb-24 pt-4 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-xl px-4 pb-24 pt-4 sm:px-6 md:ml-[calc(16rem+4rem)] md:max-w-2xl lg:max-w-2xl xl:max-w-2xl">{children}</main>
       <BottomNav />
     </div>
   );
