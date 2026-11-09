@@ -35,3 +35,41 @@ input,
 textarea {
   font: inherit;
 }
+
+/* Image loading placeholder */
+@keyframes image-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes image-fade-in {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+.image-shimmer {
+  animation: image-shimmer 1.6s ease-in-out infinite;
+}
+
+.image-fade-in {
+  animation: image-fade-in 0.45s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-shimmer,
+  .image-fade-in {
+    animation: none;
+  }
+}
