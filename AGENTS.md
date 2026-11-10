@@ -10,6 +10,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Branches and pull requests
 
-- `dev` is the integration branch. Start new work from `origin/dev`.
-- Every pull request targets `dev` (for example `gh pr create --base dev`). Never open a PR into `main`.
-- `main` is only updated from `dev` now and then, through a `dev` → `main` PR that a maintainer asks for.
+- The only long-lived branches are `dev` and `main`. Every other branch belongs to exactly one pull request.
+- `dev` is the integration branch. Start each piece of work on a new branch from `origin/dev`, and open one PR for it.
+- Never reuse a branch for a second PR, and never stack unrelated work on a branch that already has a PR.
+- Every pull request targets `dev` (for example `gh pr create --base dev`). Never open a PR into `main`, or into another feature branch.
+- Merge PRs into `dev` with **squash merge** only (for example `gh pr merge <n> --squash --delete-branch`), then delete the branch on GitHub and locally.
+- `main` is only updated from `dev` now and then, through a `dev` → `main` PR that a maintainer asks for. That release PR is the one exception to squashing: merge it with a merge commit so `dev` and `main` keep a shared history.
