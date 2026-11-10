@@ -73,3 +73,119 @@ textarea {
     animation: none;
   }
 }
+
+/* World map pins and popups (components/map/PostsMap.tsx) */
+.mealit-pin {
+  position: relative;
+  display: flex;
+  height: 44px;
+  width: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #ec4899;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: #18181b;
+  color: #f4f4f5;
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.45);
+  overflow: visible;
+}
+
+.mealit-pin img {
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  transform: rotate(45deg);
+}
+
+.mealit-pin i {
+  transform: rotate(45deg);
+}
+
+.mealit-pin-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 20px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: #ec4899;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  transform: rotate(45deg);
+}
+
+.mealit-popup-wrapper .leaflet-popup-content-wrapper,
+.mealit-popup-wrapper .leaflet-popup-tip {
+  background: #18181b;
+  color: #f4f4f5;
+  border: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.mealit-popup-wrapper .leaflet-popup-content {
+  margin: 12px;
+}
+
+.mealit-popup-wrapper a.leaflet-popup-close-button {
+  color: #a1a1aa;
+}
+
+.mealit-popup-place {
+  margin: 0 0 8px;
+  color: #a1a1aa;
+  font-size: 12px;
+}
+
+.mealit-popup-list {
+  display: flex;
+  max-height: 240px;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.mealit-popup-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mealit-popup-item:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+
+.mealit-popup-item img {
+  height: 44px;
+  width: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.mealit-popup-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mealit-popup-meta {
+  margin: 2px 0 0;
+  color: #a1a1aa;
+  font-size: 12px;
+}
+
+.leaflet-container {
+  background: #0b0b0e;
+  font-family: inherit;
+}
