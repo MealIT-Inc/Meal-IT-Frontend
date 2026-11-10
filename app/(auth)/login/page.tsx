@@ -51,38 +51,61 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <img src="/MealitLogo.svg" alt="MealIT logo" className="mx-auto h-12 w-12 rounded-2xl object-contain" />
-        <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
-        <p className="text-sm text-zinc-400">Sign in to continue your social experience.</p>
+    <div className="space-y-7">
+      <div className="space-y-3">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7fdc5a]">Sign in</p>
+        <h1 className="text-4xl font-black tracking-tight">
+          Welcome{" "}
+          <span className="bg-gradient-to-r from-[#01bf62] via-[#7fdc5a] to-[#c0ff71] bg-clip-text text-transparent">
+            back.
+          </span>
+        </h1>
+        <p className="text-zinc-400">Pick up where you left off and see where everyone is eating.</p>
       </div>
 
-      <Button variant="secondary" onClick={handleGoogle} disabled={loading} className="w-full justify-center gap-2 rounded-2xl py-3">
-        <FontAwesomeIcon icon={faGoogle} className="text-xl" />
+      <Button
+        variant="secondary"
+        onClick={handleGoogle}
+        disabled={loading}
+        className="w-full gap-2 border-white/15 py-3.5 text-base disabled:opacity-60"
+      >
+        <FontAwesomeIcon icon={faGoogle} className="text-lg" />
         <span>Continue with Google</span>
       </Button>
 
       <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-zinc-500">
         <div className="h-px flex-1 bg-white/10" />
-        Or
+        Or with email
         <div className="h-px flex-1 bg-white/10" />
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <Input id="email" label="Email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Input id="password" label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <Button type="submit" className="w-full rounded-2xl py-3" disabled={loading}>
-          Sign in
-        </Button>
+        <Input id="email" label="Email" type="email" autoComplete="email" accent="green" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input id="password" label="Password" type="password" autoComplete="current-password" accent="green" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <button
+          type="submit"
+          disabled={loading}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#01bf62] px-7 py-3.5 font-semibold text-zinc-950 shadow-lg shadow-[#01bf62]/25 transition hover:bg-[#7fdc5a] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Signing in…" : "Sign in"}
+          {!loading && <i className="fa-solid fa-arrow-right text-sm" aria-hidden />}
+        </button>
       </form>
 
-      {error && <div className="text-sm text-red-400">{error}</div>}
+      {error && (
+        <div className="flex items-start gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <i className="fa-solid fa-circle-exclamation mt-0.5" aria-hidden />
+          <span>{error}</span>
+        </div>
+      )}
 
-      <div className="flex items-center justify-between text-sm text-zinc-400">
-        <Link href="/signup" className="text-pink-400 transition hover:text-pink-300">
-          Create account
-        </Link>
+      <div className="flex items-center justify-between border-t border-white/10 pt-5 text-sm text-zinc-400">
+        <span>
+          New to MealIT?{" "}
+          <Link href="/signup" className="font-semibold text-[#7fdc5a] transition hover:text-[#c0ff71]">
+            Join free
+          </Link>
+        </span>
         <Link href="/" className="transition hover:text-white">
           Forgot password?
         </Link>
