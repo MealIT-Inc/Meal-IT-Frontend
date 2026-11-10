@@ -9,6 +9,7 @@ import getFirebaseAuth from "@/lib/firebase";
 import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
+import { AuthLoadingOverlay, Spinner } from "@/components/auth/AuthLoadingOverlay";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -17,20 +18,25 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // "popup": Google window open; "finishing": signed in, waiting for the API before redirect
+  const [googleStatus, setGoogleStatus] = useState<"idle" | "popup" | "finishing">("idle");
 
   async function handleGoogle() {
     setLoading(true);
     setError(null);
+    setGoogleStatus("popup");
     try {
       const auth = getFirebaseAuth();
       if (!auth) throw new Error("Firebase not initialized");
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(auth, provider);
+      // Keep the loader up until the feed takes over (it unmounts this page).
+      setGoogleStatus("finishing");
       router.replace("/feed");
     } catch (err: any) {
       setError(err?.message ?? "Google sign-in failed");
-    } finally {
+      setGoogleStatus("idle");
       setLoading(false);
     }
   }
@@ -60,6 +66,7 @@ export default function SignupPage() {
 
   return (
     <div className="space-y-6">
+      {googleStatus === "finishing" && <AuthLoadingOverlay />}
       <div className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7fdc5a]">Join free</p>
         <h1 className="text-4xl font-black tracking-tight">
@@ -72,8 +79,8 @@ export default function SignupPage() {
       </div>
 
       <Button variant="secondary" onClick={handleGoogle} disabled={loading} className="w-full gap-2 border-white/15 py-3.5 text-base disabled:opacity-60">
-        <FontAwesomeIcon icon={faGoogle} className="text-lg" />
-        <span>Continue with Google</span>
+        {googleStatus === "idle" ? <FontAwesomeIcon icon={faGoogle} className="text-lg" /> : <Spinner />}
+        <span>{googleStatus === "idle" ? "Continue with Google" : "Connecting to Google…"}</span>
       </Button>
 
       <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-zinc-500">
@@ -91,7 +98,7 @@ export default function SignupPage() {
           disabled={loading}
           className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#01bf62] px-7 py-3.5 font-semibold text-zinc-950 shadow-lg shadow-[#01bf62]/25 transition hover:bg-[#7fdc5a] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Creating account…" : "Create account"}
+          {loading && googleStatus === "idle" ? "Creating account…" : "Create account"}
           {!loading && <i className="fa-solid fa-arrow-right text-sm" aria-hidden />}
         </button>
       </form>
