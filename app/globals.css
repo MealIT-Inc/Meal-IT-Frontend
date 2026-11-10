@@ -189,3 +189,27 @@ textarea {
   background: #0b0b0e;
   font-family: inherit;
 }
+
+/* Landing page photo strip (app/page.tsx) */
+@keyframes landing-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
+.landing-marquee {
+  animation: landing-marquee 45s linear infinite;
+}
+
+.landing-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-marquee {
+    animation: none;
+  }
+}
