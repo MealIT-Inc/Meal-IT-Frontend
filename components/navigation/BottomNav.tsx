@@ -7,6 +7,7 @@ import { MouseEvent } from "react";
 const items = [
   { href: "/feed", label: "Home", iconClass: "fa-solid fa-house" },
   { href: "/explore", label: "Explore", iconClass: "fa-solid fa-compass" },
+  { href: "/map", label: "Map", iconClass: "fa-solid fa-map-location-dot" },
   { href: "/create", label: "Create", iconClass: "fa-solid fa-plus" },
   { href: "/notifications", label: "Alerts", iconClass: "fa-solid fa-bell" },
   { href: "/profile", label: "Profile", iconClass: "fa-solid fa-user" },
